@@ -1,23 +1,103 @@
-# LDS_Laboratorio_1
+# 🏷️ Portfolio Pessoal - Bernardo 👨‍💻
 
-Repositório criado para a Sprint 1 do primeiro projeto da disciplina Laboratório de Desenvolvimento de Software.
+> [!NOTE]
+> Website de portfólio pessoal moderno e responsivo, desenvolvido para consolidar presença digital e apresentar projetos e trajetória profissional. **Foque na experiência do usuário e na performance.** >
 
-## Sprint 1 - Wireframes
+<table>
+<tr>
+<td width="800px">
+<div align="justify">
+Este projeto consiste em um <b>portfólio pessoal</b> desenvolvido durante o Laboratório de Desenvolvimento de Software. Utilizando uma estética moderna baseada em wireframes personalizados, a aplicação apresenta uma interface <i>dark mode</i> com acentos em verde oliva, garantindo <i>legibilidade</i> e <i>profissionalismo</i>. A documentação abaixo serve como guia para execução local, entendimento da arquitetura de componentes e futuras expansões, promovendo <b>documentação de qualidade profissional</b> e <i>reprodutibilidade</i>.
+</div>
+</td>
+<td>
+<div>
+<img src="https://joaopauloaramuni.github.io/image/logo_ES_vertical.png" alt="Logo do Projeto" width="120px"/>
+</div>
+</td>
+</tr>
+</table>
 
-- Link do figma: https://www.figma.com/design/wENMIruAlH6J3fYNsDF37X/lab1---Portfolio?node-id=0-1&t=b3PN0SgQWLIH7blm-1
+---
 
-Página "Sobre Mim"
+## 🛠 Tecnologias Utilizadas
 
-<img width="1568" height="880" alt="about_me" src="https://github.com/user-attachments/assets/485b816d-1cf9-4a08-b2be-3b3390038bd0" />
+### 💻 Front-end
 
-Página "Projetos"
+* **Framework:** React v19
+* **Build Tool:** Vite v6
+* **Estilização:** Tailwind CSS v4 (Alpha/Latest)
+* **Ícones:** Lucide React
+* **Linguagem:** JavaScript ES6+
 
-<img width="1566" height="880" alt="my_projects" src="https://github.com/user-attachments/assets/1bcb33e2-7026-4707-802b-9d6000e5a4d6" />
+---
 
-Página "Experiência"
+## 🏗 Arquitetura
 
-<img width="1567" height="881" alt="experience" src="https://github.com/user-attachments/assets/76f8f493-bfe0-4309-9f51-86ca8a8695f6" />
+A aplicação segue uma arquitetura de **Single Page Application (SPA)** focada em componentes funcionais e hooks do React.
 
-Página "Contato"
+* **Layout:** Estrutura baseada em Grid e Flexbox do Tailwind para garantir responsividade pixel-perfect.
+* **Componentização:** Divisão lógica entre Header (Navbar), Hero (About), Projects, Experience (Timeline) e Contact.
 
-<img width="1565" height="880" alt="contact_me" src="https://github.com/user-attachments/assets/9b3cf33b-e9d6-46f5-9bec-5ff7cc0dae8b" />
+---
+
+## 🔧 Instalação e Execução
+
+### Pré-requisitos
+
+* **Node.js:** Versão **22.x (LTS)** ou superior (Necessário para compatibilidade com Vite 6 e Tailwind v4)
+* **Gerenciador de Pacotes:** npm (v10 ou superior)
+
+### 📦 Instalação de Dependências
+
+```bash
+# Clone o repositório
+git clone <URL_DO_SEU_REPOSITÓRIO>
+cd meu-portfolio
+
+# Instale as dependências
+npm install
+
+```
+
+### ⚡ Como Executar a Aplicação
+
+```bash
+# Terminal: Inicie o servidor de desenvolvimento
+npm run dev
+
+```
+
+🎨 *O Front-end estará disponível em **http://localhost:5173**.*
+
+---
+
+## 📂 Estrutura de Pastas
+
+```
+.
+├── src/
+│   ├── assets/          # 🖼️ Imagens e ícones.
+│   ├── components/      # 🧱 Componentes (Navbar, Card, Timeline).
+│   ├── App.jsx          # 📘 Componente principal e estrutura de seções.
+│   ├── index.css        # 🎨 Configuração do Tailwind v4 e variáveis de tema.
+│   └── main.jsx         # 🔌 Ponto de entrada do React.
+├── vite.config.js       # ⚙️ Configuração do Vite com plugin Tailwind.
+└── package.json         # 📦 Scripts e dependências.
+
+```
+
+---
+
+## 👥 Autores
+
+| 👤 Nome | :octocat: GitHub | 💼 LinkedIn |
+| --- | --- | --- |
+| Bernardo Gomes| [GitHub](https://www.google.com/search?q=https://github.com/bernardogomes25) | [LinkedIn](https://www.google.com/search?q=https://linkedin.com/in/bernardogomespereira) |
+
+---
+
+## 🙏 Agradecimentos
+
+* **[Prof. Dr. João Paulo Aramuni](https://github.com/joaopauloaramuni)** - Pelos templates e guias de documentação.
+* **Comunidade Open Source** - Pelas bibliotecas Lucide e Tailwind CSS.
