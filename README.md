@@ -1,7 +1,7 @@
 # 🏷️ Portfolio Pessoal - Bernardo 👨‍💻
 
 > [!NOTE]
-> Website de portfólio pessoal moderno e responsivo, desenvolvido para consolidar presença digital e apresentar projetos e trajetória profissional. **Foque na experiência do usuário e na performance.** >
+> Website de portfólio pessoal moderno e responsivo, desenvolvido para apresentar projetos e trajetória profissional. 
 
 <table>
 <tr>
@@ -17,6 +17,19 @@ Este projeto consiste em um <b>portfólio pessoal</b> desenvolvido durante o Lab
 </td>
 </tr>
 </table>
+
+---
+
+## 🖼️ Wireframes
+<div align="center">
+<img width="512" height="287" alt="image" src="https://github.com/user-attachments/assets/9d883e22-64b0-4c52-82e1-363f0161bb22" />
+
+<img width="512" height="287" alt="image" src="https://github.com/user-attachments/assets/afd8692a-ca98-4cc2-af3e-1fa3263de92a" />
+
+<img width="512" height="287" alt="image" src="https://github.com/user-attachments/assets/b4aff6dc-e75f-45c1-8da6-da95ac365522" />
+
+<img width="512" height="287" alt="image" src="https://github.com/user-attachments/assets/5831168c-37cf-4e37-a3df-f825ebe11b2f" />
+</div>
 
 ---
 
