@@ -7,7 +7,7 @@
 <tr>
 <td width="800px">
 <div align="justify">
-Este projeto consiste em um <b>portfólio pessoal</b> desenvolvido durante o Laboratório de Desenvolvimento de Software. Utilizando uma estética moderna baseada em wireframes personalizados, a aplicação apresenta uma interface <i>dark mode</i> com acentos em verde oliva, garantindo <i>legibilidade</i> e <i>profissionalismo</i>. A documentação abaixo serve como guia para execução local, entendimento da arquitetura de componentes e futuras expansões, promovendo <b>documentação de qualidade profissional</b> e <i>reprodutibilidade</i>.
+Este projeto consiste em um <b>portfólio pessoal</b> desenvolvido durante o Laboratório de Desenvolvimento de Software. Utilizando uma estética baseada em wireframes personalizados, a aplicação apresenta uma interface <i>dark mode</i> com detalhes em verde, garantindo <i>legibilidade</i> e <i>profissionalismo</i>. A documentação abaixo serve como guia para execução local, entendimento da arquitetura dos componentes e futuras expansões, promovendo <b>documentação de qualidade</b> e <i>reprodutibilidade</i>.
 </div>
 </td>
 <td>
