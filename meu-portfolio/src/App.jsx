@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import profileImg from './assets/img/pfp.JPEG'
 import {
   Github,
@@ -15,12 +15,12 @@ import {
   Loader2,
 } from 'lucide-react'
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Constantes ─────────────────────────────────────────────────────────────
 
 const GREEN = '#A3C552'
 const BLUE  = '#2323C8'
 
-// ─── Translations ─────────────────────────────────────────────────────────────
+// ─── Traduções ──────────────────────────────────────────────────────────────
 
 const TRANSLATIONS = {
   en: {
@@ -73,44 +73,6 @@ const TRANSLATIONS = {
         messageRequired: 'Message is required.',
       },
     },
-    projectData: [
-      {
-        title: 'Project Title',
-        year: '2025',
-        category: 'Frontend',
-        tags: ['HTML', 'JS', 'CSS'],
-        description:
-          'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, iste praesentium provident repudiandae eius ipsa quos perferendis libero fugit minima.',
-        github: 'https://github.com',
-      },
-      {
-        title: 'Project Title',
-        year: '2024',
-        category: 'Backend',
-        tags: ['Java', 'Spring', 'MySQL'],
-        description:
-          'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, iste praesentium provident repudiandae eius ipsa quos perferendis libero fugit minima.',
-        github: 'https://github.com',
-      },
-      {
-        title: 'Project Title',
-        year: '2024',
-        category: 'Fullstack',
-        tags: ['React', 'Node.js', 'PostgreSQL'],
-        description:
-          'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, iste praesentium provident repudiandae eius ipsa quos perferendis libero fugit minima.',
-        github: 'https://github.com',
-      },
-      {
-        title: 'Project Title',
-        year: '2023',
-        category: 'Frontend',
-        tags: ['TypeScript', 'Next.js', 'Tailwind'],
-        description:
-          'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, iste praesentium provident repudiandae eius ipsa quos perferendis libero fugit minima.',
-        github: 'https://github.com',
-      },
-    ],
     experienceData: [
       {
         company: 'Offerwise',
@@ -171,44 +133,6 @@ const TRANSLATIONS = {
         messageRequired: 'A mensagem é obrigatória.',
       },
     },
-    projectData: [
-      {
-        title: 'Título do Projeto',
-        year: '2025',
-        category: 'Frontend',
-        tags: ['HTML', 'JS', 'CSS'],
-        description:
-          'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, iste praesentium provident repudiandae eius ipsa quos perferendis libero fugit minima.',
-        github: 'https://github.com',
-      },
-      {
-        title: 'Título do Projeto',
-        year: '2024',
-        category: 'Backend',
-        tags: ['Java', 'Spring', 'MySQL'],
-        description:
-          'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, iste praesentium provident repudiandae eius ipsa quos perferendis libero fugit minima.',
-        github: 'https://github.com',
-      },
-      {
-        title: 'Título do Projeto',
-        year: '2024',
-        category: 'Fullstack',
-        tags: ['React', 'Node.js', 'PostgreSQL'],
-        description:
-          'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, iste praesentium provident repudiandae eius ipsa quos perferendis libero fugit minima.',
-        github: 'https://github.com',
-      },
-      {
-        title: 'Título do Projeto',
-        year: '2023',
-        category: 'Frontend',
-        tags: ['TypeScript', 'Next.js', 'Tailwind'],
-        description:
-          'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, iste praesentium provident repudiandae eius ipsa quos perferendis libero fugit minima.',
-        github: 'https://github.com',
-      },
-    ],
     experienceData: [
       {
         company: 'Offerwise',
@@ -221,11 +145,105 @@ const TRANSLATIONS = {
   },
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Utilitários ────────────────────────────────────────────────────────────
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// ─── Decorative SVG Helpers ───────────────────────────────────────────────────
+// ─── Hook de Repositórios GitHub ────────────────────────────────────────────
+
+function langToCategory(language) {
+  const map = {
+    C: 'Systems', 'C++': 'Systems', Assembly: 'Systems', Rust: 'Systems',
+    'C#': 'Backend', Java: 'Backend', Kotlin: 'Backend',
+    Python: 'Backend', Go: 'Backend', Ruby: 'Backend', PHP: 'Backend',
+    JavaScript: 'Frontend', TypeScript: 'Frontend',
+    HTML: 'Frontend', CSS: 'Frontend', Vue: 'Frontend', Svelte: 'Frontend',
+    Swift: 'Mobile', Dart: 'Mobile',
+  }
+  return map[language] ?? (language ?? 'Other')
+}
+
+function useGithubRepos(username) {
+  const [repos, setRepos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetch(
+      `https://api.github.com/users/${username}/repos?type=public&sort=updated&per_page=100`,
+      { headers: { Accept: 'application/vnd.github+json' } }
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error(`GitHub API ${res.status}`)
+        return res.json()
+      })
+      .then((data) => {
+        const mapped = data.map((r) => ({
+          title: r.name.replace(/[-_]/g, ' '),
+          year: new Date(r.pushed_at).getFullYear().toString(),
+          category: langToCategory(r.language),
+          tags: r.topics?.length ? r.topics : r.language ? [r.language] : [],
+          description: r.description ?? '',
+          github: r.html_url,
+        }))
+        setRepos(mapped)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(err.message)
+        setLoading(false)
+      })
+  }, [username])
+
+  return { repos, loading, error }
+}
+
+// ─── Fundo Spline ───────────────────────────────────────────────────────────
+
+const SplineLazy = lazy(() => import('@splinetool/react-spline'))
+
+function SplineBackground({ scrollY }) {
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: -1,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          top: '-10%',
+          bottom: '-10%',
+          left: 0,
+          right: 0,
+          transform: `translateY(${scrollY * 0.04}px)`,
+          willChange: 'transform',
+        }}
+      >
+        <Suspense fallback={null}>
+          <SplineLazy
+            scene="https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode"
+            style={{ width: '100%', height: '100%' }}
+          />
+        </Suspense>
+      </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(160deg, rgba(35,35,200,0.68) 0%, rgba(8,8,45,0.82) 100%)',
+        }}
+      />
+    </div>
+  )
+}
+
+// ─── Formas SVG Decorativas ────────────────────────────────────────────────
 
 function DotGrid({ cols = 8, rows = 4, gap = 18, r = 2.5, color }) {
   const w = (cols - 1) * gap + r * 2
@@ -256,7 +274,6 @@ function StairShape({ color, size = 48, steps = 4, direction = 'down-right' }) {
   const lines = []
   for (let i = 0; i < steps; i++) {
     if (direction === 'down-right') {
-      // horizontal then vertical going down-right
       lines.push(
         <line key={`h${i}`} x1={i * step} y1={i * step} x2={(i + 1) * step} y2={i * step} stroke={color} strokeWidth="2.5" strokeLinecap="square" />,
         <line key={`v${i}`} x1={(i + 1) * step} y1={i * step} x2={(i + 1) * step} y2={(i + 1) * step} stroke={color} strokeWidth="2.5" strokeLinecap="square" />
@@ -289,7 +306,31 @@ function Squiggle({ color, width = 48 }) {
   )
 }
 
-// ─── Navbar ──────────────────────────────────────────────────────────────────
+// ─── Paralaxe ──────────────────────────────────────────────────────────────
+
+function useParallax() {
+  const [scrollY, setScrollY] = useState(0)
+  const rafRef = useRef(null)
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(() => {
+        setScrollY(window.scrollY)
+        rafRef.current = null
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [])
+
+  return scrollY
+}
+
+// ─── Barra de Navegação ─────────────────────────────────────────────────────
 
 function Navbar({ lang, onToggleLang }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -305,12 +346,11 @@ function Navbar({ lang, onToggleLang }) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: BLUE }}>
       <div className="flex items-center justify-between px-6 sm:px-10 py-4">
-        {/* Logo */}
         <a href="#about" className="font-extrabold text-xl tracking-tight select-none" style={{ color: GREEN }}>
           Bernardo Gomes
         </a>
 
-        {/* Desktop links */}
+        {/* Links desktop */}
         <ul className="hidden md:flex items-center gap-8">
           {NAV_LINKS.map(({ label, Icon, href }) => (
             <li key={label}>
@@ -325,7 +365,7 @@ function Navbar({ lang, onToggleLang }) {
           ))}
         </ul>
 
-        {/* Lang toggle + burger */}
+        {/* Seletor de idioma + menu hamburger */}
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleLang}
@@ -347,7 +387,7 @@ function Navbar({ lang, onToggleLang }) {
         </div>
       </div>
 
-      {/* Mobile dropdown */}
+      {/* Menu mobile */}
       {menuOpen && (
         <div className="md:hidden border-t pb-3" style={{ borderColor: 'rgba(163,197,82,0.3)' }}>
           <ul className="flex flex-col">
@@ -370,7 +410,7 @@ function Navbar({ lang, onToggleLang }) {
   )
 }
 
-// ─── Footer ──────────────────────────────────────────────────────────────────
+// ─── Rodapé ─────────────────────────────────────────────────────────────────
 
 function Footer({ lang }) {
   return (
@@ -390,31 +430,35 @@ function Footer({ lang }) {
   )
 }
 
-// ─── About / Hero Section ─────────────────────────────────────────────────────
+// ─── Seção Hero / Sobre ─────────────────────────────────────────────────────
 
-function AboutSection({ lang }) {
+function AboutSection({ lang, scrollY }) {
   const t = TRANSLATIONS[lang].about
   const heroLines = t.heroTitle.split('\n')
 
   return (
     <>
-      {/* ── Hero Split ── */}
       <section
         id="about"
         className="flex flex-col md:flex-row min-h-screen pt-[64px]"
+        style={{ overflow: 'hidden' }}
       >
-        {/* Left – blue pane */}
+        {/* Painel esquerdo – azul */}
         <div
           className="relative flex flex-col justify-between px-8 sm:px-14 py-14 md:w-[58%]"
           style={{ backgroundColor: BLUE }}
         >
-          {/* Decorative stair – lower right of blue pane */}
-          <div className="absolute bottom-20 right-8 opacity-30 hidden md:block">
+          <div
+            className="absolute bottom-20 right-8 opacity-30 hidden md:block"
+            style={{ transform: `translateY(${scrollY * 0.35}px)`, willChange: 'transform' }}
+          >
             <StairShape color={GREEN} size={64} steps={4} direction="down-right" />
           </div>
 
-          {/* Hero title */}
-          <div className="flex-1 flex flex-col justify-center">
+          <div
+            className="flex-1 flex flex-col justify-center"
+            style={{ transform: `translateY(${-scrollY * 0.08}px)`, willChange: 'transform' }}
+          >
             <h1
               className="font-extrabold leading-none mb-6"
               style={{ color: GREEN, fontSize: 'clamp(3rem, 7vw, 6rem)' }}
@@ -428,43 +472,52 @@ function AboutSection({ lang }) {
             </p>
           </div>
 
-          {/* Bottom stat cols */}
           <div className="grid grid-cols-2 gap-6 mt-12">
             <p className="text-white/70 text-xs sm:text-sm leading-relaxed">{t.stat1}</p>
             <p className="text-white/70 text-xs sm:text-sm leading-relaxed">{t.stat2}</p>
           </div>
         </div>
 
-        {/* Right – green pane */}
+        {/* Painel direito – verde */}
         <div
           className="relative flex items-center justify-center overflow-hidden md:w-[42%] min-h-[50vh] md:min-h-0"
           style={{ backgroundColor: GREEN }}
         >
-          {/* Dot grid – top area */}
-          <div className="absolute top-8 left-8 opacity-60">
+          <div
+            className="absolute top-8 left-8 opacity-60"
+            style={{ transform: `translateY(${-scrollY * 0.28}px)`, willChange: 'transform' }}
+          >
             <DotGrid cols={8} rows={5} gap={16} r={2.5} color={BLUE} />
           </div>
 
-          {/* Squiggle – left centre */}
-          <div className="absolute left-6 top-1/2 -translate-y-1/2 opacity-60">
+          <div
+            className="absolute left-6 top-1/2 opacity-60"
+            style={{ transform: `translateY(calc(-50% + ${scrollY * 0.18}px))`, willChange: 'transform' }}
+          >
             <Squiggle color={BLUE} width={44} />
           </div>
 
-          {/* Stair – lower left */}
-          <div className="absolute bottom-16 left-10 opacity-30">
+          <div
+            className="absolute bottom-16 left-10 opacity-30"
+            style={{ transform: `translateY(${scrollY * 0.28}px)`, willChange: 'transform' }}
+          >
             <StairShape color={BLUE} size={56} steps={4} direction="down-right" />
           </div>
 
-          {/* Right-edge dots + square */}
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 items-center opacity-50">
+          <div
+            className="absolute right-6 top-1/2 flex flex-col gap-3 items-center opacity-50"
+            style={{ transform: `translateY(calc(-50% + ${-scrollY * 0.15}px))`, willChange: 'transform' }}
+          >
             <div className="w-4 h-4 border-2" style={{ borderColor: BLUE }} />
             {[0,1,2,3].map(i => (
               <div key={i} className="w-2 h-2 rotate-45" style={{ backgroundColor: BLUE }} />
             ))}
           </div>
 
-          {/* Profile photo with offset white border */}
-          <div className="relative z-10 m-12">
+          <div
+            className="relative z-10 m-12"
+            style={{ transform: `translateY(${-scrollY * 0.1}px)`, willChange: 'transform' }}
+          >
             <div
               className="absolute inset-0 border-2 border-white"
               style={{ transform: 'translate(12px, 12px)' }}
@@ -479,7 +532,6 @@ function AboutSection({ lang }) {
         </div>
       </section>
 
-      {/* ── Bio details + hobbies ── */}
       <section className="py-20 px-6 max-w-5xl mx-auto">
         <h2 className="font-extrabold text-4xl sm:text-5xl mb-14" style={{ color: GREEN }}>{t.title}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
@@ -503,14 +555,14 @@ function AboutSection({ lang }) {
   )
 }
 
-// ─── Projects Section ─────────────────────────────────────────────────────────
+// ─── Seção de Projetos ──────────────────────────────────────────────────────
 
 function ProjectsSection({ lang }) {
   const t = TRANSLATIONS[lang].projects
-  const projects = TRANSLATIONS[lang].projectData
-  const [visibleCount, setVisibleCount] = useState(2)
+  const { repos, loading, error } = useGithubRepos('bernardogomes25')
+  const [visibleCount, setVisibleCount] = useState(6)
 
-  const visible = projects.slice(0, visibleCount)
+  const visible = repos.slice(0, visibleCount)
 
   const grouped = visible.reduce((acc, p) => {
     if (!acc.length || acc[acc.length - 1].year !== p.year) {
@@ -523,107 +575,115 @@ function ProjectsSection({ lang }) {
 
   return (
     <section id="projects" className="py-20 px-6 max-w-5xl mx-auto">
-      {/* Section title */}
       <div className="flex items-center gap-5 mb-14">
         <h2 className="font-extrabold text-4xl sm:text-5xl" style={{ color: GREEN }}>{t.title}</h2>
         <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(163,197,82,0.3)' }} />
       </div>
 
-      {/* Timeline */}
-      <div className="relative pl-16 sm:pl-24">
-        <div
-          className="absolute left-6 sm:left-10 top-0 bottom-0 w-0.5"
-          style={{ backgroundColor: GREEN, opacity: 0.5 }}
-        />
+      {loading && (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 size={36} className="animate-spin" style={{ color: GREEN }} />
+        </div>
+      )}
 
-        {grouped.map((group) => (
-          <div key={group.year}>
-            {/* Year marker */}
-            <div className="relative mb-6 flex items-center">
-              <div
-                className="absolute w-4 h-4 rotate-45 z-10"
-                style={{ backgroundColor: GREEN, left: 'calc(-2.5rem - 2px)' }}
-              />
-              <span
-                className="text-xs font-bold px-3 py-0.5 rounded-full"
-                style={{ backgroundColor: GREEN, color: '#000' }}
-              >
-                {group.year}
-              </span>
-            </div>
+      {error && (
+        <p className="text-red-400 text-sm text-center py-10">Failed to load repositories: {error}</p>
+      )}
 
-            <div className="space-y-5 mb-10">
-              {group.items.map((project, i) => (
-                <div key={i} className="relative flex items-start gap-4">
-                  <div
-                    className="absolute w-3 h-3 rounded-full mt-5 z-10"
-                    style={{
-                      backgroundColor: GREEN,
-                      border: `2px solid ${BLUE}`,
-                      left: 'calc(-2.5rem + 1px)',
-                    }}
-                  />
+      {!loading && !error && (
+        <div className="relative pl-16 sm:pl-24">
+          <div
+            className="absolute left-6 sm:left-10 top-0 bottom-0 w-0.5"
+            style={{ backgroundColor: GREEN, opacity: 0.5 }}
+          />
 
-                  {/* Card */}
-                  <div
-                    className="flex-1 flex flex-col sm:flex-row gap-4 rounded-2xl p-5 border transition-all hover:border-opacity-60"
-                    style={{ backgroundColor: 'rgba(35,35,200,0.35)', borderColor: 'rgba(163,197,82,0.25)' }}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <h3 className="text-white text-lg font-bold">{project.title}</h3>
-                        <span
-                          className="text-xs font-semibold px-2 py-0.5 rounded-full border"
-                          style={{ borderColor: GREEN, color: GREEN }}
-                        >
-                          {project.category}
-                        </span>
-                        <a
-                          href={project.github}
-                          aria-label="GitHub repository"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-auto hover:opacity-60 transition-opacity"
-                          style={{ color: GREEN }}
-                        >
-                          <Github size={20} strokeWidth={1.8} />
-                        </a>
-                      </div>
+          {grouped.map((group) => (
+            <div key={group.year}>
+              <div className="relative mb-6 flex items-center">
+                <div
+                  className="absolute w-4 h-4 rotate-45 z-10"
+                  style={{ backgroundColor: GREEN, left: 'calc(-2.5rem - 2px)' }}
+                />
+                <span
+                  className="text-xs font-bold px-3 py-0.5 rounded-full"
+                  style={{ backgroundColor: GREEN, color: '#000' }}
+                >
+                  {group.year}
+                </span>
+              </div>
 
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {project.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-black text-xs font-semibold px-3 py-0.5 rounded-full"
-                            style={{ backgroundColor: GREEN }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      <p className="text-white/70 text-sm leading-relaxed">{project.description}</p>
-                    </div>
-
-                    {/* Image placeholder */}
+              <div className="space-y-5 mb-10">
+                {group.items.map((project, i) => (
+                  <div key={i} className="relative flex items-start gap-4">
                     <div
-                      className="flex-shrink-0 w-full sm:w-36 h-28 rounded-xl flex items-center justify-center border"
-                      style={{ borderColor: 'rgba(163,197,82,0.2)', backgroundColor: 'rgba(35,35,200,0.4)' }}
+                      className="absolute w-3 h-3 rounded-full mt-5 z-10"
+                      style={{
+                        backgroundColor: GREEN,
+                        border: `2px solid ${BLUE}`,
+                        left: 'calc(-2.5rem + 1px)',
+                      }}
+                    />
+
+                    <div
+                      className="flex-1 flex flex-col sm:flex-row gap-4 rounded-2xl p-5 border transition-all hover:border-opacity-60"
+                      style={{ backgroundColor: 'rgba(35,35,200,0.35)', borderColor: 'rgba(163,197,82,0.25)' }}
                     >
-                      <ImageIcon size={32} strokeWidth={1.2} style={{ color: 'rgba(163,197,82,0.4)' }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          <h3 className="text-white text-lg font-bold">{project.title}</h3>
+                          <span
+                            className="text-xs font-semibold px-2 py-0.5 rounded-full border"
+                            style={{ borderColor: GREEN, color: GREEN }}
+                          >
+                            {project.category}
+                          </span>
+                          <a
+                            href={project.github}
+                            aria-label="GitHub repository"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-auto hover:opacity-60 transition-opacity"
+                            style={{ color: GREEN }}
+                          >
+                            <Github size={20} strokeWidth={1.8} />
+                          </a>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {project.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-black text-xs font-semibold px-3 py-0.5 rounded-full"
+                              style={{ backgroundColor: GREEN }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        <p className="text-white/70 text-sm leading-relaxed">{project.description}</p>
+                      </div>
+
+                      {/* Placeholder da imagem */}
+                      <div
+                        className="flex-shrink-0 w-full sm:w-36 h-28 rounded-xl flex items-center justify-center border"
+                        style={{ borderColor: 'rgba(163,197,82,0.2)', backgroundColor: 'rgba(35,35,200,0.4)' }}
+                      >
+                        <ImageIcon size={32} strokeWidth={1.2} style={{ color: 'rgba(163,197,82,0.4)' }} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {visibleCount < projects.length && (
+      {!loading && !error && visibleCount < repos.length && (
         <div className="flex justify-center mt-6">
           <button
-            onClick={() => setVisibleCount((c) => Math.min(c + 2, projects.length))}
+            onClick={() => setVisibleCount((c) => Math.min(c + 6, repos.length))}
             className="font-bold px-12 py-3 rounded-full hover:opacity-80 transition-opacity text-black"
             style={{ backgroundColor: GREEN }}
           >
@@ -635,7 +695,7 @@ function ProjectsSection({ lang }) {
   )
 }
 
-// ─── Experience Section ───────────────────────────────────────────────────────
+// ─── Seção de Experiência ───────────────────────────────────────────────────
 
 function ExperienceSection({ lang }) {
   const t = TRANSLATIONS[lang].experience
@@ -649,7 +709,6 @@ function ExperienceSection({ lang }) {
       </div>
 
       <div className="relative pl-16 sm:pl-24">
-        {/* Vertical line */}
         <div
           className="absolute left-6 sm:left-10 top-0 bottom-0 w-0.5"
           style={{ backgroundColor: GREEN, opacity: 0.5 }}
@@ -676,7 +735,6 @@ function ExperienceSection({ lang }) {
                 }}
               />
 
-              {/* Card */}
               <div
                 className="flex-1 rounded-2xl p-5 sm:p-6 border"
                 style={{ backgroundColor: GREEN, borderColor: GREEN }}
@@ -701,7 +759,7 @@ function ExperienceSection({ lang }) {
   )
 }
 
-// ─── Field ───────────────────────────────────────────────────────────────────
+// ─── Campo de Formulário ────────────────────────────────────────────────────
 
 function Field({ id, label, error, children }) {
   return (
@@ -717,7 +775,7 @@ function Field({ id, label, error, children }) {
   )
 }
 
-// ─── Contact Section ──────────────────────────────────────────────────────────
+// ─── Seção de Contato ───────────────────────────────────────────────────────
 
 function ContactSection({ lang }) {
   const t = TRANSLATIONS[lang].contact
@@ -797,7 +855,7 @@ function ContactSection({ lang }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* Left column: description + social links */}
+        {/* Coluna esquerda: descrição e redes sociais */}
         <div className="flex flex-col gap-8">
           <p className="text-white/80 leading-relaxed text-base">{t.description}</p>
 
@@ -828,7 +886,7 @@ function ContactSection({ lang }) {
           </div>
         </div>
 
-        {/* Right column: form */}
+        {/* Coluna direita: formulário */}
         <div
           className="rounded-2xl p-6 sm:p-8 border"
           style={{ backgroundColor: 'rgba(35,35,200,0.3)', borderColor: 'rgba(163,197,82,0.2)' }}
@@ -894,17 +952,19 @@ function ContactSection({ lang }) {
   )
 }
 
-// ─── Root App ─────────────────────────────────────────────────────────────────
+// ─── App Principal ──────────────────────────────────────────────────────────
 
 export default function App() {
   const [lang, setLang] = useState('en')
+  const scrollY = useParallax()
   const toggleLang = () => setLang((l) => (l === 'en' ? 'pt' : 'en'))
 
   return (
-    <div className="min-h-screen text-white" style={{ backgroundColor: BLUE }}>
+    <div className="min-h-screen text-white" style={{ position: 'relative', backgroundColor: 'transparent' }}>
+      <SplineBackground scrollY={scrollY} />
       <Navbar lang={lang} onToggleLang={toggleLang} />
       <main>
-        <AboutSection lang={lang} />
+        <AboutSection lang={lang} scrollY={scrollY} />
         <div style={{ borderTop: '1px solid rgba(163,197,82,0.15)' }}>
           <ProjectsSection lang={lang} />
         </div>
