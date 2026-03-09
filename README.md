@@ -91,22 +91,40 @@ npm run dev
 
 ---
 
-## 📂 Estrutura de Pastas
+## � Deploy
+
+O deploy foi realizado via **[Vercel](https://vercel.com/)**, com integração contínua ao repositório GitHub. A cada push na branch principal, um novo deploy é acionado automaticamente.
+
+* **URL de Produção:** [https://portfolio-bernardo-gomes.vercel.app/](https://portfolio-bernardo-gomes.vercel.app/)
+* **Plataforma:** Vercel
+* **Build Command:** `npm run build`
+* **Output Directory:** `dist`
+* **Configuração:** `vercel.json` — define rewrites para suporte ao roteamento SPA (todas as rotas redirecionam para `index.html`).
+
+---
+
+## �📂 Estrutura de Pastas
 
 ```
 .
-├── public/              # 📁 Arquivos estáticos públicos.
+├── public/
+│   └── vite.svg                      # 🖼️ Favicon padrão do Vite.
 ├── src/
-│   ├── assets/          # 🖼️ Imagens e ícones.
-│   │   └── img/         # 📸 Imagens do portfólio.
-│   ├── App.css          # 🎨 Estilos globais do componente App.
-│   ├── App.jsx          # 📘 Componente principal e estrutura de seções.
-│   ├── index.css        # 🎨 Configuração do Tailwind v4 e variáveis de tema.
-│   └── main.jsx         # 🔌 Ponto de entrada do React.
-├── index.html           # 🌐 HTML raiz da aplicação.
-├── eslint.config.js     # 🔍 Configuração do ESLint.
-├── vite.config.js       # ⚙️ Configuração do Vite com plugin Tailwind.
-└── package.json         # 📦 Scripts e dependências.
+│   ├── assets/
+│   │   └── img/                      # 📸 Imagens e GIFs do portfólio.
+│   │       ├── GerenciamentoAeroporto.gif
+│   │       ├── GerenciamentoDeTarefas.gif
+│   │       ├── HotelManagement.gif
+│   │       └── pfp.JPEG
+│   ├── App.css                       # 🎨 Estilos globais do componente App.
+│   ├── App.jsx                       # 📘 Componente principal e estrutura de seções.
+│   ├── index.css                     # 🎨 Configuração do Tailwind v4 e variáveis de tema.
+│   └── main.jsx                      # 🔌 Ponto de entrada do React.
+├── index.html                        # 🌐 HTML raiz da aplicação.
+├── eslint.config.js                  # 🔍 Configuração do ESLint.
+├── vercel.json                       # ☁️ Configuração de deploy e rewrites para a Vercel.
+├── vite.config.js                    # ⚙️ Configuração do Vite com plugin Tailwind.
+└── package.json                      # 📦 Scripts e dependências.
 
 ```
 
