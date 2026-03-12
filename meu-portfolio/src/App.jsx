@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import profileImg from './assets/img/pfp.JPEG'
 import tarefasGif from './assets/img/GerenciamentoDeTarefas.gif'
 import hotelGif from './assets/img/HotelManagement.gif'
@@ -19,8 +19,8 @@ import {
 
 // ─── Constantes ─────────────────────────────────────────────────────────────
 
-const GREEN = '#A3C552'
-const BLUE  = '#2323C8'
+const GREEN = '#E8E8E8'
+const BLUE  = '#2A2A2A'
 
 // ─── Traduções ──────────────────────────────────────────────────────────────
 
@@ -52,7 +52,6 @@ const TRANSLATIONS = {
     },
     projects: {
       title: 'My Projects',
-      loadMore: 'Load more...',
     },
     experience: {
       title: 'Experience',
@@ -112,7 +111,6 @@ const TRANSLATIONS = {
     },
     projects: {
       title: 'Meus Projetos',
-      loadMore: 'Carregar mais...',
     },
     experience: {
       title: 'Experiência',
@@ -151,6 +149,38 @@ const TRANSLATIONS = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+// ─── Typewriter ──────────────────────────────────────────────────────────────
+
+function useTypewriter(text, speed) {
+  const [displayed, setDisplayed] = useState(text)
+  const prevRef = useRef(text)
+  const timerRef = useRef(null)
+
+  useEffect(() => {
+    if (text === prevRef.current) return
+    prevRef.current = text
+    if (timerRef.current) clearInterval(timerRef.current)
+    setDisplayed('')
+    let i = 0
+    timerRef.current = setInterval(() => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i >= text.length) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }, speed)
+  }, [text, speed])
+
+  return displayed
+}
+
+function T({ children, speed = 30 }) {
+  const text = typeof children === 'string' ? children : ''
+  const displayed = useTypewriter(text, speed)
+  return <>{displayed}</>
+}
+
 // ─── Repositórios Estáticos ──────────────────────────────────────────────────
 
 const STATIC_REPOS = [
@@ -183,47 +213,123 @@ const STATIC_REPOS = [
   },
 ]
 
-// ─── Fundo Spline ───────────────────────────────────────────────────────────
+// ─── Scroll Parallax ─────────────────────────────────────────────────────────
 
-const SplineLazy = lazy(() => import('@splinetool/react-spline'))
+// depth layers: FAR (small/dim/blurred/slow), MID, NEAR (large/vivid/sharp/fast+glow)
+const PARALLAX_ITEMS = [
+  // ── FAR ──────────────────────────────────────────────────────────────────
+  { text: 'void',   left:  '5%', top:  '8%', speed:  0.10, opacity: 0.12, size: '0.70rem', blur: 2   },
+  { text: '===',    left: '15%', top: '55%', speed: -0.11, opacity: 0.11, size: '0.75rem', blur: 2   },
+  { text: 'false',  left: '28%', top: '72%', speed:  0.09, opacity: 0.13, size: '0.70rem', blur: 2   },
+  { text: 'while',  left: '42%', top: '18%', speed: -0.14, opacity: 0.12, size: '0.70rem', blur: 2   },
+  { text: '0x00',   left: '58%', top: '82%', speed:  0.11, opacity: 0.11, size: '0.70rem', blur: 2   },
+  { text: 'struct', left: '70%', top: '42%', speed: -0.13, opacity: 0.12, size: '0.70rem', blur: 2   },
+  { text: 'enum',   left: '82%', top: '12%', speed:  0.10, opacity: 0.11, size: '0.73rem', blur: 2   },
+  { text: '#!',     left: '91%', top: '65%', speed: -0.12, opacity: 0.12, size: '0.70rem', blur: 2   },
+  { text: 'NaN',    left: '48%', top: '35%', speed:  0.09, opacity: 0.11, size: '0.70rem', blur: 2   },
+  { text: 'import', left: '20%', top: '90%', speed: -0.11, opacity: 0.12, size: '0.70rem', blur: 2   },
+  { text: 'type',   left: '65%', top: '60%', speed:  0.13, opacity: 0.11, size: '0.72rem', blur: 2   },
+  { text: 'int',    left: '35%', top: '48%', speed: -0.10, opacity: 0.12, size: '0.70rem', blur: 2   },
+  { text: 'def',    left: '55%', top:  '3%', speed:  0.08, opacity: 0.11, size: '0.70rem', blur: 2   },
+  { text: 'impl',   left:  '8%', top: '43%', speed: -0.12, opacity: 0.12, size: '0.70rem', blur: 2   },
+  { text: 'switch', left: '78%', top: '85%', speed:  0.11, opacity: 0.11, size: '0.70rem', blur: 2   },
+  { text: 'case',   left: '33%', top: '62%', speed: -0.09, opacity: 0.10, size: '0.70rem', blur: 2   },
+  { text: 'export', left: '62%', top: '28%', speed:  0.12, opacity: 0.11, size: '0.70rem', blur: 2   },
+  { text: '\\n',    left: '88%', top: '32%', speed: -0.10, opacity: 0.10, size: '0.70rem', blur: 2   },
 
-function SplineBackground({ scrollY }) {
+  // ── MID ──────────────────────────────────────────────────────────────────
+  { text: 'const',  left: '18%', top: '45%', speed: -0.30, opacity: 0.20, size: '1.05rem', blur: 0.5 },
+  { text: 'null',   left: '55%', top: '68%', speed:  0.28, opacity: 0.20, size: '1.00rem', blur: 0.5 },
+  { text: '//',     left: '32%', top: '85%', speed: -0.35, opacity: 0.18, size: '1.05rem', blur: 0.5 },
+  { text: '<T>',    left: '24%', top: '22%', speed:  0.32, opacity: 0.20, size: '1.05rem', blur: 0.5 },
+  { text: 'async',  left: '38%', top:  '5%', speed: -0.38, opacity: 0.18, size: '1.00rem', blur: 0.5 },
+  { text: 'git',    left:  '3%', top: '35%', speed:  0.25, opacity: 0.18, size: '1.00rem', blur: 0.5 },
+  { text: '??',     left: '67%', top: '55%', speed: -0.33, opacity: 0.20, size: '1.05rem', blur: 0.5 },
+  { text: 'fn()',   left: '80%', top: '75%', speed:  0.35, opacity: 0.22, size: '1.00rem', blur: 0.5 },
+  { text: '||',     left: '11%', top: '65%', speed: -0.28, opacity: 0.20, size: '1.10rem', blur: 0.5 },
+  { text: '...',    left: '50%', top: '92%', speed:  0.30, opacity: 0.18, size: '1.10rem', blur: 0.5 },
+  { text: 'for',    left: '75%', top: '30%', speed: -0.36, opacity: 0.20, size: '1.00rem', blur: 0.5 },
+  { text: 'class',  left: '44%', top: '58%', speed:  0.30, opacity: 0.18, size: '1.00rem', blur: 0.5 },
+  { text: '!=',     left: '88%', top: '45%', speed: -0.32, opacity: 0.19, size: '1.05rem', blur: 0.5 },
+  { text: 'return', left:  '8%', top: '78%', speed:  0.28, opacity: 0.18, size: '1.00rem', blur: 0.5 },
+  { text: 'npm',    left: '52%', top: '10%', speed: -0.35, opacity: 0.20, size: '1.00rem', blur: 0.5 },
+  { text: '++',     left: '30%', top: '38%', speed:  0.33, opacity: 0.18, size: '1.10rem', blur: 0.5 },
+  { text: 'let',    left: '78%', top: '88%', speed: -0.30, opacity: 0.18, size: '1.00rem', blur: 0.5 },
+  { text: '>>',     left: '16%', top: '14%', speed:  0.35, opacity: 0.19, size: '1.05rem', blur: 0.5 },
+  { text: 'this',   left: '60%', top: '48%', speed: -0.28, opacity: 0.18, size: '1.00rem', blur: 0.5 },
+  { text: 'new',    left: '40%', top: '75%', speed:  0.32, opacity: 0.20, size: '1.00rem', blur: 0.5 },
+
+  // ── NEAR ─────────────────────────────────────────────────────────────────
+  { text: '</>',  left:  '7%', top: '10%', speed:  0.65, opacity: 0.35, size: '1.90rem', blur: 0, glow: true },
+  { text: '{ }',  left: '86%', top:  '7%', speed: -0.58, opacity: 0.32, size: '2.10rem', blur: 0, glow: true },
+  { text: '=>',   left: '73%', top: '30%', speed:  0.70, opacity: 0.38, size: '1.85rem', blur: 0, glow: true },
+  { text: '&&',   left: '91%', top: '52%', speed: -0.72, opacity: 0.35, size: '2.00rem', blur: 0, glow: true },
+  { text: '0xFF', left: '44%', top: '40%', speed:  0.62, opacity: 0.32, size: '1.70rem', blur: 0, glow: true },
+  { text: '[ ]',  left: '22%', top: '70%', speed: -0.60, opacity: 0.30, size: '1.85rem', blur: 0, glow: true },
+  { text: '404',  left: '55%', top: '25%', speed:  0.68, opacity: 0.32, size: '1.95rem', blur: 0, glow: true },
+  { text: '--',   left: '84%', top: '62%', speed: -0.65, opacity: 0.35, size: '1.80rem', blur: 0, glow: true },
+  { text: '!',    left: '62%', top: '78%', speed:  0.68, opacity: 0.30, size: '2.20rem', blur: 0, glow: true },
+  { text: ';',    left: '12%', top: '25%', speed: -0.72, opacity: 0.28, size: '2.50rem', blur: 0, glow: true },
+  { text: '[ ]',  left: '36%', top: '88%', speed:  0.60, opacity: 0.30, size: '1.80rem', blur: 0, glow: true },
+]
+
+function ScrollParallax() {
+  const containerRef = useRef(null)
+  const rafRef = useRef(null)
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(() => {
+        const sy = window.scrollY
+        const items = containerRef.current?.querySelectorAll('[data-speed]')
+        items?.forEach((el) => {
+          el.style.transform = `translateY(${sy * parseFloat(el.dataset.speed)}px)`
+        })
+        rafRef.current = null
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [])
+
   return (
     <div
+      ref={containerRef}
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: -1,
+        zIndex: 0,
+        backgroundColor: '#1F1F1F',
         overflow: 'hidden',
         pointerEvents: 'none',
+        userSelect: 'none',
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          top: '-10%',
-          bottom: '-10%',
-          left: 0,
-          right: 0,
-          transform: `translateY(${scrollY * 0.04}px)`,
-          willChange: 'transform',
-        }}
-      >
-        <Suspense fallback={null}>
-          <SplineLazy
-            scene="https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode"
-            style={{ width: '100%', height: '100%' }}
-          />
-        </Suspense>
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(160deg, rgba(35,35,200,0.68) 0%, rgba(8,8,45,0.82) 100%)',
-        }}
-      />
+      {PARALLAX_ITEMS.map((item, i) => (
+        <span
+          key={i}
+          data-speed={item.speed}
+          style={{
+            position: 'absolute',
+            left: item.left,
+            top: item.top,
+            fontSize: item.size,
+            fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+            color: `rgba(232,232,232,${item.opacity})`,
+            whiteSpace: 'nowrap',
+            willChange: 'transform',
+            letterSpacing: '0.05em',
+            filter: item.blur ? `blur(${item.blur}px)` : undefined,
+            textShadow: item.glow ? '0 0 14px rgba(232,232,232,0.30)' : undefined,
+          }}
+        >
+          {item.text}
+        </span>
+      ))}
     </div>
   )
 }
@@ -291,30 +397,6 @@ function Squiggle({ color, width = 48 }) {
   )
 }
 
-// ─── Paralaxe ──────────────────────────────────────────────────────────────
-
-function useParallax() {
-  const [scrollY, setScrollY] = useState(0)
-  const rafRef = useRef(null)
-
-  useEffect(() => {
-    const onScroll = () => {
-      if (rafRef.current) return
-      rafRef.current = requestAnimationFrame(() => {
-        setScrollY(window.scrollY)
-        rafRef.current = null
-      })
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    }
-  }, [])
-
-  return scrollY
-}
-
 // ─── Barra de Navegação ─────────────────────────────────────────────────────
 
 function Navbar({ lang, onToggleLang }) {
@@ -329,7 +411,7 @@ function Navbar({ lang, onToggleLang }) {
   ]
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: BLUE }}>
+    <nav className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: 'rgba(27,27,27,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
       <div className="flex items-center justify-between px-6 sm:px-10 py-4">
         <a href="#about" className="font-extrabold text-xl tracking-tight select-none" style={{ color: GREEN }}>
           Bernardo Gomes
@@ -344,7 +426,7 @@ function Navbar({ lang, onToggleLang }) {
                 className="flex flex-col items-center gap-1 text-white hover:opacity-70 transition-opacity text-xs font-medium"
               >
                 <Icon size={18} strokeWidth={1.8} />
-                <span>{label}</span>
+                <span><T speed={30}>{label}</T></span>
               </a>
             </li>
           ))}
@@ -366,6 +448,7 @@ function Navbar({ lang, onToggleLang }) {
             className="md:hidden text-white hover:opacity-70 transition-opacity"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
+            style={{ transition: 'transform 0.25s ease', transform: menuOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
           >
             {menuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
@@ -373,24 +456,38 @@ function Navbar({ lang, onToggleLang }) {
       </div>
 
       {/* Menu mobile */}
-      {menuOpen && (
-        <div className="md:hidden border-t pb-3" style={{ borderColor: 'rgba(163,197,82,0.3)' }}>
-          <ul className="flex flex-col">
-            {NAV_LINKS.map(({ label, Icon, href }) => (
-              <li key={label}>
-                <a
-                  href={href}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 px-6 py-3 text-white hover:opacity-70 transition-opacity"
-                >
-                  <Icon size={18} strokeWidth={1.8} />
-                  <span className="text-sm font-medium">{label}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <div
+        className="md:hidden"
+        style={{
+          overflow: 'hidden',
+          maxHeight: menuOpen ? '320px' : '0px',
+          opacity: menuOpen ? 1 : 0,
+          transition: 'max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease',
+          borderTop: menuOpen ? '1px solid rgba(232,232,232,0.12)' : '1px solid transparent',
+        }}
+      >
+        <ul className="flex flex-col pb-3">
+          {NAV_LINKS.map(({ label, Icon, href }, i) => (
+            <li
+              key={label}
+              style={{
+                transform: menuOpen ? 'translateX(0)' : 'translateX(-12px)',
+                opacity: menuOpen ? 1 : 0,
+                transition: `transform 0.30s ease ${i * 0.06}s, opacity 0.25s ease ${i * 0.06}s`,
+              }}
+            >
+              <a
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-6 py-3 text-white hover:opacity-70 transition-opacity"
+              >
+                <Icon size={18} strokeWidth={1.8} />
+                <span className="text-sm font-medium"><T speed={30}>{label}</T></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   )
 }
@@ -399,7 +496,7 @@ function Navbar({ lang, onToggleLang }) {
 
 function Footer({ lang }) {
   return (
-    <footer className="flex items-center px-10 py-6 mt-0" style={{ backgroundColor: GREEN }}>
+    <footer className="flex items-center px-10 py-6" style={{ backgroundColor: GREEN }}>
       <a
         href="https://github.com/bernardogomes25"
         aria-label="GitHub"
@@ -409,7 +506,7 @@ function Footer({ lang }) {
       >
         <Github size={26} strokeWidth={1.8} />
       </a>
-      <p className="flex-1 text-center text-black text-sm font-medium">{TRANSLATIONS[lang].footer}</p>
+      <p className="flex-1 text-center text-black text-sm font-medium"><T speed={18}>{TRANSLATIONS[lang].footer}</T></p>
       <div className="w-7" aria-hidden="true" />
     </footer>
   )
@@ -417,7 +514,7 @@ function Footer({ lang }) {
 
 // ─── Seção Hero / Sobre ─────────────────────────────────────────────────────
 
-function AboutSection({ lang, scrollY }) {
+function AboutSection({ lang }) {
   const t = TRANSLATIONS[lang].about
   const heroLines = t.heroTitle.split('\n')
 
@@ -431,35 +528,29 @@ function AboutSection({ lang, scrollY }) {
         {/* Painel esquerdo – azul */}
         <div
           className="relative flex flex-col justify-between px-8 sm:px-14 py-14 md:w-[58%]"
-          style={{ backgroundColor: BLUE }}
+          style={{ backgroundColor: 'rgba(27,27,27,0.65)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
         >
-          <div
-            className="absolute bottom-20 right-8 opacity-30 hidden md:block"
-            style={{ transform: `translateY(${scrollY * 0.35}px)`, willChange: 'transform' }}
-          >
+          <div className="absolute bottom-20 right-8 opacity-30 hidden md:block">
             <StairShape color={GREEN} size={64} steps={4} direction="down-right" />
           </div>
 
-          <div
-            className="flex-1 flex flex-col justify-center"
-            style={{ transform: `translateY(${-scrollY * 0.08}px)`, willChange: 'transform' }}
-          >
+          <div className="flex-1 flex flex-col justify-center">
             <h1
               className="font-extrabold leading-none mb-6"
               style={{ color: GREEN, fontSize: 'clamp(3rem, 7vw, 6rem)' }}
             >
               {heroLines.map((line, i) => (
-                <span key={i} className="block">{line}</span>
+                <span key={i} className="block"><T speed={45}>{line}</T></span>
               ))}
             </h1>
             <p className="text-white text-base sm:text-lg max-w-md leading-relaxed">
-              {t.heroSub}
+              <T speed={14}>{t.heroSub}</T>
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-6 mt-12">
-            <p className="text-white/70 text-xs sm:text-sm leading-relaxed">{t.stat1}</p>
-            <p className="text-white/70 text-xs sm:text-sm leading-relaxed">{t.stat2}</p>
+            <p className="text-white/70 text-xs sm:text-sm leading-relaxed"><T speed={10}>{t.stat1}</T></p>
+            <p className="text-white/70 text-xs sm:text-sm leading-relaxed"><T speed={10}>{t.stat2}</T></p>
           </div>
         </div>
 
@@ -468,44 +559,29 @@ function AboutSection({ lang, scrollY }) {
           className="relative flex items-center justify-center overflow-hidden md:w-[42%] min-h-[50vh] md:min-h-0"
           style={{ backgroundColor: GREEN }}
         >
-          <div
-            className="absolute top-8 left-8 opacity-60"
-            style={{ transform: `translateY(${-scrollY * 0.28}px)`, willChange: 'transform' }}
-          >
+          <div className="absolute top-8 left-8 opacity-60">
             <DotGrid cols={8} rows={5} gap={16} r={2.5} color={BLUE} />
           </div>
 
-          <div
-            className="absolute left-6 top-1/2 opacity-60"
-            style={{ transform: `translateY(calc(-50% + ${scrollY * 0.18}px))`, willChange: 'transform' }}
-          >
+          <div className="absolute left-6 top-1/2 opacity-60">
             <Squiggle color={BLUE} width={44} />
           </div>
 
-          <div
-            className="absolute bottom-16 left-10 opacity-30"
-            style={{ transform: `translateY(${scrollY * 0.28}px)`, willChange: 'transform' }}
-          >
+          <div className="absolute bottom-16 left-10 opacity-30">
             <StairShape color={BLUE} size={56} steps={4} direction="down-right" />
           </div>
 
-          <div
-            className="absolute right-6 top-1/2 flex flex-col gap-3 items-center opacity-50"
-            style={{ transform: `translateY(calc(-50% + ${-scrollY * 0.15}px))`, willChange: 'transform' }}
-          >
+          <div className="absolute right-6 top-1/2 flex flex-col gap-3 items-center opacity-50">
             <div className="w-4 h-4 border-2" style={{ borderColor: BLUE }} />
             {[0,1,2,3].map(i => (
               <div key={i} className="w-2 h-2 rotate-45" style={{ backgroundColor: BLUE }} />
             ))}
           </div>
 
-          <div
-            className="relative z-10 m-12"
-            style={{ transform: `translateY(${-scrollY * 0.1}px)`, willChange: 'transform' }}
-          >
+          <div className="relative z-10 m-12">
             <div
-              className="absolute inset-0 border-2 border-white"
-              style={{ transform: 'translate(12px, 12px)' }}
+              className="absolute inset-0 border-2"
+              style={{ transform: 'translate(12px, 12px)', borderColor: BLUE }}
             />
             <img
               src={profileImg}
@@ -518,21 +594,21 @@ function AboutSection({ lang, scrollY }) {
       </section>
 
       <section className="py-20 px-6 max-w-5xl mx-auto">
-        <h2 className="font-extrabold text-4xl sm:text-5xl mb-14" style={{ color: GREEN }}>{t.title}</h2>
+        <h2 className="font-extrabold text-4xl sm:text-5xl mb-14" style={{ color: GREEN }}><T speed={35}>{t.title}</T></h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
-          <p className="text-white leading-relaxed text-sm sm:text-base">{t.bio1}</p>
-          <p className="text-white leading-relaxed text-sm sm:text-base">{t.bio2}</p>
+          <p className="text-white leading-relaxed text-sm sm:text-base"><T speed={4}>{t.bio1}</T></p>
+          <p className="text-white leading-relaxed text-sm sm:text-base"><T speed={4}>{t.bio2}</T></p>
         </div>
 
-        <div className="border-t pt-14" style={{ borderColor: 'rgba(163,197,82,0.3)' }}>
+        <div className="border-t pt-14" style={{ borderColor: 'rgba(232,232,232,0.12)' }}>
           <h3
             className="font-extrabold text-3xl sm:text-4xl mb-8"
             style={{ color: GREEN }}
           >
-            {t.hobbiesTitle}
+            <T speed={35}>{t.hobbiesTitle}</T>
           </h3>
           <p className="text-white/80 max-w-3xl leading-relaxed text-sm sm:text-base">
-            {t.hobbiesText}
+            <T speed={4}>{t.hobbiesText}</T>
           </p>
         </div>
       </section>
@@ -557,8 +633,8 @@ function ProjectsSection({ lang }) {
   return (
     <section id="projects" className="py-20 px-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-5 mb-14">
-        <h2 className="font-extrabold text-4xl sm:text-5xl" style={{ color: GREEN }}>{t.title}</h2>
-        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(163,197,82,0.3)' }} />
+        <h2 className="font-extrabold text-4xl sm:text-5xl" style={{ color: GREEN }}><T speed={35}>{t.title}</T></h2>
+        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(232,232,232,0.15)' }} />
       </div>
 
       <div className="relative pl-16 sm:pl-24">
@@ -596,7 +672,7 @@ function ProjectsSection({ lang }) {
 
                     <div
                       className="flex-1 flex flex-col sm:flex-row gap-4 rounded-2xl p-5 border transition-all hover:border-opacity-60"
-                      style={{ backgroundColor: 'rgba(35,35,200,0.35)', borderColor: 'rgba(163,197,82,0.25)' }}
+                      style={{ backgroundColor: 'rgba(42,42,42,0.9)', borderColor: 'rgba(232,232,232,0.1)' }}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -637,7 +713,7 @@ function ProjectsSection({ lang }) {
                       {/* GIF do projeto */}
                       <div
                         className="flex-shrink-0 w-full sm:w-36 h-28 rounded-xl overflow-hidden border"
-                        style={{ borderColor: 'rgba(163,197,82,0.2)', backgroundColor: 'rgba(35,35,200,0.4)' }}
+                        style={{ borderColor: 'rgba(232,232,232,0.08)', backgroundColor: 'rgba(50,50,50,0.9)' }}
                       >
                         <img
                           src={project.gif}
@@ -665,8 +741,8 @@ function ExperienceSection({ lang }) {
   return (
     <section id="experience" className="py-20 px-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-5 mb-14">
-        <h2 className="font-extrabold text-4xl sm:text-5xl" style={{ color: GREEN }}>{t.title}</h2>
-        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(163,197,82,0.3)' }} />
+        <h2 className="font-extrabold text-4xl sm:text-5xl" style={{ color: GREEN }}><T speed={35}>{t.title}</T></h2>
+        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(232,232,232,0.15)' }} />
       </div>
 
       <div className="relative pl-16 sm:pl-24">
@@ -702,15 +778,15 @@ function ExperienceSection({ lang }) {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3 flex-wrap">
                   <h3 className="text-black font-extrabold text-lg sm:text-xl">{exp.company}</h3>
-                  <span className="text-black/70 text-xs sm:text-sm">{exp.period}</span>
+                  <span className="text-black/70 text-xs sm:text-sm"><T speed={28}>{exp.period}</T></span>
                   <span
                     className="text-xs font-bold px-3 py-0.5 rounded-full self-start"
                     style={{ backgroundColor: BLUE, color: GREEN }}
                   >
-                    {exp.title}
+                    <T speed={22}>{exp.title}</T>
                   </span>
                 </div>
-                <p className="text-black/80 text-sm leading-relaxed">{exp.description}</p>
+                <p className="text-black/80 text-sm leading-relaxed"><T speed={4}>{exp.description}</T></p>
               </div>
             </div>
           ))}
@@ -726,7 +802,7 @@ function Field({ id, label, error, children }) {
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-white/70 text-xs font-semibold uppercase tracking-wider">
-        {label}
+        <T speed={35}>{label}</T>
       </label>
       <div>
         {children}
@@ -806,19 +882,19 @@ function ContactSection({ lang }) {
 
   const inputCls =
     'w-full rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:ring-2 border transition-colors'
-  const inputStyle = { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(163,197,82,0.3)' }
+  const inputStyle = { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(232,232,232,0.2)' }
 
   return (
     <section id="contacts" className="py-20 px-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-5 mb-14">
-        <h2 className="font-extrabold text-4xl sm:text-5xl" style={{ color: GREEN }}>{t.title}</h2>
-        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(163,197,82,0.3)' }} />
+        <h2 className="font-extrabold text-4xl sm:text-5xl" style={{ color: GREEN }}><T speed={35}>{t.title}</T></h2>
+        <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(232,232,232,0.15)' }} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Coluna esquerda: descrição e redes sociais */}
         <div className="flex flex-col gap-8">
-          <p className="text-white/80 leading-relaxed text-base">{t.description}</p>
+          <p className="text-white/80 leading-relaxed text-base"><T speed={8}>{t.description}</T></p>
 
           <div className="flex flex-col gap-4">
             {[
@@ -837,7 +913,7 @@ function ContactSection({ lang }) {
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: 'rgba(163,197,82,0.15)' }}
+                  style={{ backgroundColor: 'rgba(232,232,232,0.08)' }}
                 >
                   <Icon size={18} strokeWidth={1.8} />
                 </div>
@@ -850,7 +926,7 @@ function ContactSection({ lang }) {
         {/* Coluna direita: formulário */}
         <div
           className="rounded-2xl p-6 sm:p-8 border"
-          style={{ backgroundColor: 'rgba(35,35,200,0.3)', borderColor: 'rgba(163,197,82,0.2)' }}
+          style={{ backgroundColor: 'rgba(42,42,42,0.9)', borderColor: 'rgba(232,232,232,0.1)' }}
         >
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -917,26 +993,27 @@ function ContactSection({ lang }) {
 
 export default function App() {
   const [lang, setLang] = useState('en')
-  const scrollY = useParallax()
   const toggleLang = () => setLang((l) => (l === 'en' ? 'pt' : 'en'))
 
   return (
-    <div className="min-h-screen text-white" style={{ position: 'relative', backgroundColor: 'transparent' }}>
-      <SplineBackground scrollY={scrollY} />
+    <>
+      <ScrollParallax />
+      <div className="min-h-screen text-white" style={{ position: 'relative', zIndex: 1, backgroundColor: 'transparent' }}>
       <Navbar lang={lang} onToggleLang={toggleLang} />
       <main>
-        <AboutSection lang={lang} scrollY={scrollY} />
-        <div style={{ borderTop: '1px solid rgba(163,197,82,0.15)' }}>
+        <AboutSection lang={lang} />
+        <div style={{ borderTop: '1px solid rgba(232,232,232,0.08)' }}>
           <ProjectsSection lang={lang} />
         </div>
-        <div style={{ borderTop: '1px solid rgba(163,197,82,0.15)' }}>
+        <div style={{ borderTop: '1px solid rgba(232,232,232,0.08)' }}>
           <ExperienceSection lang={lang} />
         </div>
-        <div style={{ borderTop: '1px solid rgba(163,197,82,0.15)' }}>
+        <div style={{ borderTop: '1px solid rgba(232,232,232,0.08)' }}>
           <ContactSection lang={lang} />
         </div>
       </main>
       <Footer lang={lang} />
-    </div>
+      </div>
+    </>
   )
 }
